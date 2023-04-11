@@ -1,60 +1,62 @@
-const fs = require("fs/promises");
+const ctrlWrapper = require("../utils/ctrlWrapper");
+const HttpError = require("../helpers/HttpError");
+const shema = require("../shema/shema");
 
-const path = require("path");
-const { nanoid } = require("nanoid");
-
-const contactsPath = path.join(__dirname, "contacts.json");
-
-const getContacts = async () => {
-  const data = await fs.readFile(contactsPath, "utf-8");
-  return JSON.parse(data);
+const gettContacts = async (req, res) => {
+  const result = await shema.Contact.find();
+  res.json(result);
 };
 
-const getContactById = async (contactId) => {
-  const contact = await getContacts();
-  const resultContact = contact.find((item) => item.id === contactId);
-  return resultContact || null;
-};
-
-const removeContact = async (contactId) => {
-  const contact = await getContacts();
-  const id = contact.findIndex((item) => item.id === contactId);
-  if (id === -1) {
-    return;
+const getContactById = async (req, res) => {
+  const { contactId } = req.params;
+  const result = await shema.Contact.findById(contactId);
+  if (!result) {
+    throw HttpError(404, `Contact with ${contactId} not found`);
   }
-  const [result] = contact.splice(id, 1);
-  await fs.writeFile(contactsPath, JSON.stringify(contact, null, 2));
-  return result;
+  res.json(result);
 };
 
-const addContact = async ({ name, email, phone }) => {
-  const contact = await getContacts();
-
-  const newContact = {
-    id: nanoid(),
-    name,
-    email,
-    phone,
-  };
-  contact.push(newContact);
-  await fs.writeFile(contactsPath, JSON.stringify(contact, null, 2));
-  return newContact;
+const addContact = async (req, res) => {
+  const result = await shema.Contact.create(req.body);
+  res.status(201).json(result);
 };
-const updateContact = async (id, body) => {
-  const contact = await getContacts();
-  const index = contact.findIndex((item) => item.id === id);
-  if (index === -1) {
-    return null;
+
+const removeContact = async (req, res) => {
+  const { contactId } = req.params;
+  const result = await shema.Contact.findByIdAndDelete(contactId);
+  if (!result) {
+    throw HttpError(404, `Contact with ${contactId} not found`);
   }
-  contact[index] = { id, ...body };
-  await fs.writeFile(contactsPath, JSON.stringify(contact, null, 2));
-  return contact[index];
+  res.json({
+    message: `Delete contact with id: ${contactId}`,
+  });
 };
 
+const updateContact = async (req, res) => {
+  const { contactId } = req.params;
+  const result = await shema.Contact.findByIdAndUpdate(contactId, req.body, {
+    new: true,
+  });
+  if (!result) {
+    throw HttpError(404, `Contact with ${contactId} not found`);
+  }
+  res.json(result);
+};
+const updateContactFavorite = async (req, res) => {
+  const { contactId } = req.params;
+  const result = await shema.Contact.findByIdAndUpdate(contactId, req.body, {
+    new: true,
+  });
+  if (!result) {
+    throw HttpError(404, `Contact with ${contactId} not found`);
+  }
+  res.json(result);
+};
 module.exports = {
-  getContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
+  gettContacts: ctrlWrapper(gettContacts),
+  getContactById: ctrlWrapper(getContactById),
+  removeContact: ctrlWrapper(removeContact),
+  addContact: ctrlWrapper(addContact),
+  updateContact: ctrlWrapper(updateContact),
+  updateContactFavorite: ctrlWrapper(updateContactFavorite),
 };
