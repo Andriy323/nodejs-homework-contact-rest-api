@@ -3,7 +3,10 @@ const HttpError = require("../helpers/HttpError");
 const shema = require("../shema/shema");
 
 const gettContacts = async (req, res) => {
-  const result = await shema.Contact.find();
+  const { page = 1, limit = 10 } = req.query;
+  const { _id: owner } = req.user;
+  const skip = (page - 1) * limit;
+  const result = await shema.Contact.find({ owner }, "", { skip, limit });
   res.json(result);
 };
 
@@ -17,7 +20,8 @@ const getContactById = async (req, res) => {
 };
 
 const addContact = async (req, res) => {
-  const result = await shema.Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await shema.Contact.create({ ...req.body, owner });
   res.status(201).json(result);
 };
 
