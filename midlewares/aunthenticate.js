@@ -11,10 +11,9 @@ if(bearer !== "Bearer"){
 }
 try {
     const {id} = jwt.verify(token, SECRET_KEY)
-    console.log(id)
     const user = await User.findById(id)
     if(!user || !user.token){
-        next(HttpError(401))
+       return next(HttpError(401))
     }
     req.user = user
     next()
