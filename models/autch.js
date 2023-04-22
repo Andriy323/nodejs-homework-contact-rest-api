@@ -1,11 +1,15 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
+const fs = require("fs/promises");
+const path = require("path");
+const gravatar = require("gravatar");
 const ctrlWrapper = require("../utils/ctrlWrapper");
 const { HttpError } = require("../helpers");
 
 const { User } = require("../shema/shema-user");
 const { SECRET_KEY } = process.env;
+
+const dirAvatar = path.join(__dirname, "../", "public", "avatars");
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -13,8 +17,14 @@ const register = async (req, res) => {
   if (user) {
     throw HttpError(409, "This email is busy");
   }
+
   const hashPassword = await bcrypt.hash(password, 10);
-  const result = await User.create({ ...req.body, password: hashPassword });
+  const avatarURL = gravatar.url(email);
+  const result = await User.create({
+    ...req.body,
+    password: hashPassword,
+    avatarURL,
+  });
   res.status(200).json({
     email: result.email,
     subscription: result.subscription,
@@ -57,10 +67,21 @@ const logout = async (req, res) => {
     message: "Logout success ",
   });
 };
+const updateAvatar = async (req, res) => {
+  const { _id } = req.user;
+  const { path: tempUpload, filename } = req.file;
+  const nameAvatar = `${_id}_${filename}`;
+  const resultUpload = path.join(dirAvatar, filename);
+  const avatarURL = path.join("avatars", nameAvatar);
+  await fs.rename(tempUpload, resultUpload);
+  await User.findByIdAndUpdate(_id, { avatarURL });
 
+  res.json(avatarURL);
+};
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   current: ctrlWrapper(current),
   logout: ctrlWrapper(logout),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
