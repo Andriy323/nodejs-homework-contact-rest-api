@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-
 const ctrl = require("../../models/contacts");
 const validateBody = require("../../utils/validateBody");
 const shemas = require("../../utils/validation/contactValidationSchemas");
