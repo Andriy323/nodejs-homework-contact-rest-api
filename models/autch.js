@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Jimp = require("jimp");
 const fs = require("fs/promises");
 const path = require("path");
 const gravatar = require("gravatar");
@@ -10,7 +11,6 @@ const { User } = require("../shema/shema-user");
 const { SECRET_KEY } = process.env;
 
 const dirAvatar = path.join(__dirname, "../", "public", "avatars");
-
 const register = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -67,7 +67,7 @@ const logout = async (req, res) => {
     message: "Logout success ",
   });
 };
-const updateAvatar = async (req, res) => {
+const updateAvatar = async (req, res, next) => {
   const { _id } = req.user;
   const { path: tempUpload, filename } = req.file;
   const nameAvatar = `${_id}_${filename}`;
@@ -75,8 +75,11 @@ const updateAvatar = async (req, res) => {
   const avatarURL = path.join("avatars", nameAvatar);
   await fs.rename(tempUpload, resultUpload);
   await User.findByIdAndUpdate(_id, { avatarURL });
+  const image = await Jimp.read(tempUpload);
+  await image.resize(250, 250);
+  await image.writeAsync(tempUpload);
 
-  res.json(avatarURL);
+  res.status(200).json({ avatarURL });
 };
 module.exports = {
   register: ctrlWrapper(register),
