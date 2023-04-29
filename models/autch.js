@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const Jimp = require("jimp");
 const fs = require("fs/promises");
 const path = require("path");
-const {nanoid} = require("nanoid")
+const { nanoid } = require("nanoid");
 const gravatar = require("gravatar");
 const ctrlWrapper = require("../utils/ctrlWrapper");
 const { HttpError, sendEmail } = require("../helpers");
@@ -19,7 +19,7 @@ const register = async (req, res) => {
   if (user) {
     throw HttpError(409, "This email is busy");
   }
-  const verificationToken = nanoid()
+  const verificationToken = nanoid();
 
   const hashPassword = await bcrypt.hash(password, 10);
   const avatarURL = gravatar.url(email);
@@ -31,10 +31,10 @@ const register = async (req, res) => {
   });
   const verifyEmail = {
     to: email,
-    subject: 'Verify email',
-    html: `<a target="_blank" href="${URL_BASE}/api/users/verify/${verificationToken}">Click verify email</a>`
-    }
-await sendEmail(verifyEmail)
+    subject: "Verify email",
+    html: `<a target="_blank" href="${URL_BASE}/api/users/verify/${verificationToken}">Click verify email</a>`,
+  };
+  await sendEmail(verifyEmail);
 
   res.status(200).json({
     email: result.email,
@@ -42,41 +42,42 @@ await sendEmail(verifyEmail)
   });
 };
 
-const verify = async(req, res) => {
-  const {verificationToken} = req.params
-  const user = await User.findOne({verificationToken})
-  if(!user){
-    throw HttpError(404, "Email not found")
+const verify = async (req, res) => {
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+    throw HttpError(404, "Email not found");
   }
-  await User.findByIdAndUpdate(user._id, {verify:true, verificationToken: ""})
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: "",
+  });
 
   res.json({
-    message: "Email verify succes"
-  })
-}
+    message: "Email verify succes",
+  });
+};
 
-
-const resendEmailVerify = async(req,res) =>{
-  const {email} = req.body
-  const user = await User.findOne({email})
-  if(!user){
-      throw HttpError(404, "Email not found")
+const resendEmailVerify = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw HttpError(404, "Email not found");
   }
-  if(user.verify){
-    throw HttpError(400, "Email verify")
+  if (user.verify) {
+    throw HttpError(400, "Email verify");
   }
 
   const verifyEmail = {
     to: email,
-    subject: 'ferify email',
-    html: `<a target="_blank" href="${URL_BASE}/api/users/verify/:${user.verificationToken}">Click verify email</a>`
-    }
-await sendEmail(verifyEmail)
-res.json({
-  message: "Email resend succes"
-})
-}
-
+    subject: "ferify email",
+    html: `<a target="_blank" href="${URL_BASE}/api/users/verify/:${user.verificationToken}">Click verify email</a>`,
+  };
+  await sendEmail(verifyEmail);
+  res.json({
+    message: "Email resend succes",
+  });
+};
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -139,5 +140,5 @@ module.exports = {
   logout: ctrlWrapper(logout),
   updateAvatar: ctrlWrapper(updateAvatar),
   verify: ctrlWrapper(verify),
-  resendEmailVerify: ctrlWrapper(resendEmailVerify)
+  resendEmailVerify: ctrlWrapper(resendEmailVerify),
 };

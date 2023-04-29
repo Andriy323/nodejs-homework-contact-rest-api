@@ -30,7 +30,7 @@ const shemaUser = new Schema({
   },
   verificationToken: {
     type: String,
-    required: [true, 'Verify token is required'],
+    required: [true, "Verify token is required"],
   },
   token: String,
 });
