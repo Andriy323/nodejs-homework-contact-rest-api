@@ -70,14 +70,25 @@ const logout = async (req, res) => {
 const updateAvatar = async (req, res, next) => {
   const { _id } = req.user;
   const { path: tempUpload, filename } = req.file;
+
+  // const image = await Jimp.read(tempUpload);
+  // await image.resize(200, 200);
+  // await image.writeAsync(tempUpload);
+
+  await Jimp.read(tempUpload)
+    .then((img) => {
+      return img.resize(250, 250).quality(60).writeAsync(tempUpload);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
   const nameAvatar = `${_id}_${filename}`;
   const resultUpload = path.join(dirAvatar, filename);
   const avatarURL = path.join("avatars", nameAvatar);
   await fs.rename(tempUpload, resultUpload);
   await User.findByIdAndUpdate(_id, { avatarURL });
-  const image = await Jimp.read(tempUpload);
-  await image.resize(250, 250);
-  await image.writeAsync(tempUpload);
+  console.log(tempUpload, "temp");
 
   res.status(200).json({ avatarURL });
 };
