@@ -56,6 +56,9 @@ const updateContactFavorite = async (req, res) => {
   }
   res.json(result);
 };
+
+
+
 module.exports = {
   gettContacts: ctrlWrapper(gettContacts),
   getContactById: ctrlWrapper(getContactById),

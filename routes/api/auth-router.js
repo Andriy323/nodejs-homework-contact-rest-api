@@ -1,6 +1,7 @@
 const express = require("express");
 const validateBody = require("../../utils/validateBody");
 const ctrl = require("../../models/autch");
+const {emailShema} = require("../../utils/validation/emailShema")
 const { loginValidation } = require("../../utils/validation/loginValidation");
 const {
   registerValidation,
@@ -24,3 +25,6 @@ router.patch(
   upload.single("avatar"),
   ctrl.updateAvatar
 );
+
+router.get("/users/verify/:verificationToken", ctrl.verify)
+router.post("/users/verify" , validateBody(emailShema), ctrl.resendEmailVerify)
